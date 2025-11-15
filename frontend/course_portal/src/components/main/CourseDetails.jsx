@@ -26,21 +26,29 @@ export default function CourseDetails() {
     const handleAddToCart = async (e, courseId) => {
         e.stopPropagation();
       
+        const accessToken = localStorage.getItem("access");
+      
+        if (!accessToken) {
+          window.alert("You need to log in first to add items to the cart.");
+          return;
+        }
+      
         try {
           const response = await api.post(
             "cart/add/",
             { course: courseId },
             {
               headers: {
-                Authorization: `Bearer ${access}`,
+                Authorization: `Bearer ${accessToken}`,
               },
             }
           );
       
           console.log("Added to cart:", response.data);
-          window.alert("added to cart")
+          window.alert("Item added to cart successfully!");
         } catch (err) {
-          console.log("Add to cart error:", err);
+          console.log("Add to cart error:", err.response?.data);
+          window.alert("Something went wrong while adding to cart.");
         }
       };
 

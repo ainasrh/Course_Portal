@@ -4,26 +4,45 @@ import { useNavigate } from "react-router-dom";
 
 const Orders = () => {
   const [items, setItems] = useState([]);
+  const [error, setError] = useState(""); // Add error state
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
-    try {
-      const access = localStorage.getItem("access");
+    const access = localStorage.getItem("access");
 
+    if (!access) {
+      setError("You need to log in to view your orders.");
+      return;
+    }
+
+    try {
       const res = await api.get("orders/", {
         headers: { Authorization: `Bearer ${access}` },
       });
 
       const allItems = res.data.flatMap((order) => order.items);
       setItems(allItems);
-    } catch (error) {
-      console.error("Failed to load orders", error);
+    } catch (err) {
+      console.error("Failed to load orders", err);
+      if (err.response && err.response.status === 401) {
+        setError("You are not authenticated. Please log in.");
+      } else {
+        setError("Something went wrong. Please try again later.");
+      }
     }
   };
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto mt-10 px-4">
+        <p className="text-red-600 font-semibold text-lg">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto mt-10 px-4">
@@ -85,8 +104,6 @@ const Orders = () => {
                 <span className="mt-2 inline-block text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full w-fit font-medium">
                   Will arrive within a week
                 </span>
-
-                
               </div>
             </div>
           ))}
